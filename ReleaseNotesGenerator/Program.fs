@@ -82,7 +82,7 @@ let main argv =
     |> Seq.groupBy (fun f -> getGroupingForPullRequest f.Tags)
     |> Seq.iter(fun (str, items) -> 
         printf "For group '%s':\r\n" str
-        items |> Seq.iter (fun item -> printf " - #%d - %s\r\n" item.Id item.Title)
+        items |> Seq.iter (fun item -> printf " - %s #%d via @%s\r\n"  item.Title item.Id item.Author)
     )
 
    printfn "%A" argv
