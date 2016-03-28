@@ -54,7 +54,7 @@ let getGroupingForPullRequest (list:string[]) =
       | 0 -> "other"
       | _ -> list.[0]
 
-let writeFeatures str items =
+let formatSection str items =
     printf "For group '%s':\r\n" str
     items |> Seq.iter (fun item -> printf " - %s - #%d via @%s\r\n"  item.Title item.Id item.Author)
     printf "\r\n"
@@ -62,10 +62,10 @@ let writeFeatures str items =
 let writeSection results name = 
    results
         |> Seq.tryFind(fun (str, items) -> str = name)
-        |> Option.iter (fun (str, items) -> writeFeatures str items)
+        |> Option.iter (fun (str, items) -> formatSection str items)
 
-let writeSkippedList (items:List<_>)=
-    printf "Entries skipped '%d':\r\n" items.Length
+let writeSkippedList (items:seq<_>)=
+    printf "Entries skipped '%d':\r\n" (items |> Seq.toList |> fun f -> f.Length)
     printf "\r\n"
 
 [<EntryPoint>]
@@ -102,7 +102,7 @@ let main argv =
 
    results
         |> Seq.tryFind(fun (str, items) -> str = "skip-release-notes")
-        |> Option.iter (fun (str, items) -> writeSkippedList (items |> Seq.toList))
+        |> Option.iter (fun (str, items) -> writeSkippedList items)
 
    printfn "%A" argv
    0 // return an integer exit code
