@@ -59,6 +59,11 @@ let writeFeatures str items =
     items |> Seq.iter (fun item -> printf " - %s - #%d via @%s\r\n"  item.Title item.Id item.Author)
     printf "\r\n"
 
+let writeSection results name = 
+   results
+        |> Seq.tryFind(fun (str, items) -> str = name)
+        |> Option.iter (fun (str, items) -> writeFeatures str items)
+
 let writeSkippedList (items:List<_>)=
     printf "Entries skipped '%d':\r\n" items.Length
     printf "\r\n"
@@ -91,17 +96,9 @@ let main argv =
                     |> Seq.groupBy (fun f -> getGroupingForPullRequest f.Tags)
                     |> Seq.toArray
 
-   results
-        |> Seq.tryFind(fun (str, items) -> str = "feature")
-        |> Option.iter (fun (str, items) -> writeFeatures str items)
-
-   results
-        |> Seq.tryFind(fun (str, items) -> str = "bugfix")
-        |> Option.iter (fun (str, items) -> writeFeatures str items)
-
-   results
-        |> Seq.tryFind(fun (str, items) -> str = "other")
-        |> Option.iter (fun (str, items) -> writeFeatures str items)
+   writeSection results "feature"
+   writeSection results "bugfix"
+   writeSection results "other"
 
    results
         |> Seq.tryFind(fun (str, items) -> str = "skip-release-notes")
