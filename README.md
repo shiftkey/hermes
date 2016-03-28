@@ -20,4 +20,4 @@ But check out [our discussion](https://github.com/octokit/octokit.net/issues/114
 
 It's just a placeholder name until I figure out something better:
 
-> *Hermes - God of boundaries, travel, communication, trade, language, and **writing**.* 
+> Hermes - God of boundaries, travel, communication, trade, language, and **writing**.
