@@ -65,7 +65,7 @@ let writeSection results name =
         |> Option.iter (fun (str, items) -> formatSection str items)
 
 let writeSkippedList (items:seq<_>)=
-    printf "Entries skipped '%d':\r\n" (items |> Seq.toList |> fun f -> f.Length)
+    printf "Entries skipped: %d\r\n" (items |> Seq.toList |> fun f -> f.Length)
     printf "\r\n"
 
 [<EntryPoint>]
