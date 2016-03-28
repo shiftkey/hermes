@@ -54,6 +54,15 @@ let getGroupingForPullRequest (list:string[]) =
       | 0 -> "other"
       | _ -> list.[0]
 
+let writeFeatures str items =
+    printf "For group '%s':\r\n" str
+    items |> Seq.iter (fun item -> printf " - %s - #%d via @%s\r\n"  item.Title item.Id item.Author)
+    printf "\r\n"
+
+let writeSkippedList (items:List<_>)=
+    printf "Entries skipped '%d':\r\n" items.Length
+    printf "\r\n"
+
 [<EntryPoint>]
 let main argv = 
    let token = System.Environment.GetEnvironmentVariable "OCTOKIT_OAUTHTOKEN"
@@ -76,14 +85,27 @@ let main argv =
 
    let mergedPullRequests = findMergePullRequests compare
 
-   mergedPullRequests
-    |> Seq.map (fun id -> await (resolvePullRequestUsingId id))
-    |> Seq.map (fun pr -> await (getPullRequestDetailsUsingResponse pr))
-    |> Seq.groupBy (fun f -> getGroupingForPullRequest f.Tags)
-    |> Seq.iter(fun (str, items) -> 
-        printf "For group '%s':\r\n" str
-        items |> Seq.iter (fun item -> printf " - %s - #%d via @%s\r\n"  item.Title item.Id item.Author)
-    )
+   let results = mergedPullRequests
+                    |> Seq.map (fun id -> await (resolvePullRequestUsingId id))
+                    |> Seq.map (fun pr -> await (getPullRequestDetailsUsingResponse pr))
+                    |> Seq.groupBy (fun f -> getGroupingForPullRequest f.Tags)
+                    |> Seq.toArray
+
+   results
+        |> Seq.tryFind(fun (str, items) -> str = "feature")
+        |> Option.iter (fun (str, items) -> writeFeatures str items)
+
+   results
+        |> Seq.tryFind(fun (str, items) -> str = "bugfix")
+        |> Option.iter (fun (str, items) -> writeFeatures str items)
+
+   results
+        |> Seq.tryFind(fun (str, items) -> str = "other")
+        |> Option.iter (fun (str, items) -> writeFeatures str items)
+
+   results
+        |> Seq.tryFind(fun (str, items) -> str = "skip-release-notes")
+        |> Option.iter (fun (str, items) -> writeSkippedList (items |> Seq.toList))
 
    printfn "%A" argv
    0 // return an integer exit code
