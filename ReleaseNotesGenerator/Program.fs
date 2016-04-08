@@ -1,58 +1,11 @@
-﻿open System
-open System.Reactive.Linq
-open System.Text.RegularExpressions
+﻿
+
 open Octokit
 open Octokit.Reactive
+open System.Reactive.Linq;
 
-// TODO: move this stuff out to a separate module for Observable-esque stuff
-
-let synchronize f = 
-  let ctx = System.Threading.SynchronizationContext.Current 
-  f (fun g arg ->
-    let nctx = System.Threading.SynchronizationContext.Current 
-    if ctx <> null && ctx <> nctx then ctx.Post((fun _ -> g(arg)), null)
-    else g(arg) )
-
-type Microsoft.FSharp.Control.Async with 
-  static member AwaitObservable(ev1:IObservable<'a>) : Async<_> =
-    synchronize (fun f ->
-      Async.FromContinuations((fun (cont,econt,ccont) -> 
-        let rec callback = (fun value ->
-          remover.Dispose()
-          f cont value )
-        and remover : IDisposable  = ev1.Subscribe(callback) 
-        () )))
-
-let await (obs:IObservable<_>) = Async.RunSynchronously (Async.AwaitObservable obs)
-
-// TODO: extract this to some Octokit-related functionality
-
-let mergeCommitRegex = Regex(@"Merge pull request #(?<id>\d{1,})", RegexOptions.Compiled);
-
-let findMergePullRequests (compareResult:Octokit.CompareResult) =
-   compareResult.Commits
-    |> Seq.map (fun c -> c.Commit.Message)
-    |> Seq.filter (fun message -> mergeCommitRegex.IsMatch(message))
-    |> Seq.map (fun message -> mergeCommitRegex.Match(message).Groups.["id"].Value)
-    |> Seq.map (fun id -> Int32.Parse(id))
-
-let resolvePullRequest (client:ObservableGitHubClient) owner name id = 
-    client.PullRequest.Get (owner, name, id)
-
-let getLabelsForPullRequest (client:ObservableGitHubClient) owner name number =
-     client.Issue.Labels.GetAllForIssue(owner, name, number)
-
-type PullRequestSummary = { Title: string; Id: int; Author: string; Tags: string[] }
-
-let getPullRequestSummary (client:ObservableGitHubClient) owner name (pr:PullRequest) = 
-    let labels = getLabelsForPullRequest client owner name pr.Number
-    let labelNames = labels.Select(fun l -> l.Name).ToArray()
-    labelNames.Select(fun l -> { Title = pr.Title; Id = pr.Number; Author = pr.User.Login; Tags = l; })
-
-let getGroupingForPullRequest (list:string[]) = 
-    match list.Length with
-      | 0 -> "other"
-      | _ -> list.[0]
+open GitHub
+open Observables
 
 let formatSection str items =
     printf "For group '%s':\r\n" str
