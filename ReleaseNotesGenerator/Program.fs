@@ -6,6 +6,7 @@ open System.Reactive.Linq;
 
 open GitHub
 open Observables
+open CommandLine
 
 let formatSection str items =
     printf "For group '%s':\r\n" str
@@ -23,14 +24,25 @@ let writeSkippedList (items:seq<_>)=
 
 [<EntryPoint>]
 let main argv = 
+
    let token = System.Environment.GetEnvironmentVariable "OCTOKIT_OAUTHTOKEN"
+
+   let defaultOptions = {
+       whatif = false;
+       repository = "";
+       token = token;
+       }
+
+   let argsProcessed = parseCommandLine (Array.toList argv) defaultOptions
+
+   // TODO: be way more cleverer about what we support
+   let index = argsProcessed.repository.IndexOf('/')
+
+   let owner = argsProcessed.repository.Substring(0, index)
+   let name = argsProcessed.repository.Substring (index+1)
+
    let client = ObservableGitHubClient(new ProductHeaderValue("Hermes"))
    client.Connection.Credentials<-Credentials(token)
-
-   // TODO: accept these as arguments
-
-   let owner = "octokit"
-   let name = "octokit.net"
 
    // curried functions
    let resolvePullRequestUsingId =  resolvePullRequest client owner name
