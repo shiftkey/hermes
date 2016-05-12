@@ -5,6 +5,7 @@ type CommandLineOptions = {
     repository: string;
     token: string;
     whatif: bool;
+    branch: string;
     }
 
 let rec parseCommandLine args optionsSoFar = 
@@ -47,7 +48,18 @@ let rec parseCommandLine args optionsSoFar =
         | _ -> 
             eprintfn "Repository needs a second argument"
             parseCommandLine xs optionsSoFar 
-
+    | "/branch"::xs ->
+        match xs with
+        | x::xss -> 
+            if x.StartsWith("/") then
+                eprintfn "branch needs a second argument"
+                parseCommandLine xs optionsSoFar 
+            else 
+                let newOptionsSoFar = { optionsSoFar with branch=x}
+                parseCommandLine xss newOptionsSoFar 
+        | [] -> 
+            eprintfn "branch needs a second argument"
+            parseCommandLine xs optionsSoFar 
     | x::xs -> 
         eprintfn "Option '%s' is unrecognized" x
         parseCommandLine xs optionsSoFar 

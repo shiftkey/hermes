@@ -1,5 +1,4 @@
 ﻿
-
 open Octokit
 open Octokit.Reactive
 open System.Reactive.Linq;
@@ -26,11 +25,12 @@ let writeSkippedList (items:seq<_>)=
 let main argv = 
 
    let token = System.Environment.GetEnvironmentVariable "OCTOKIT_OAUTHTOKEN"
-
+   
    let defaultOptions = {
        whatif = false;
        repository = "";
        token = token;
+       branch = "master"
        }
 
    let argsProcessed = parseCommandLine (Array.toList argv) defaultOptions
@@ -51,7 +51,7 @@ let main argv =
    // the actual heavy-lifting
    let latestRelease = await (client.Repository.Release.GetAll(owner,  name).Take 1)
 
-   let compare = await (client.Repository.Commit.Compare(owner, name, latestRelease.TagName, "master"))
+   let compare = await (client.Repository.Commit.Compare(owner, name, latestRelease.TagName, argsProcessed.branch))
 
    let mergedPullRequests = findMergePullRequests compare
 
