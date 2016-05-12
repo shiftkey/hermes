@@ -29,9 +29,6 @@ let rec parseCommandLine args optionsSoFar =
         | [] -> 
             eprintfn "Token needs a second argument"
             parseCommandLine xs optionsSoFar 
-        | _ -> 
-            eprintfn "Token needs a second argument"
-            parseCommandLine xs optionsSoFar 
 
     | "/repo"::xs -> 
         match xs with
@@ -45,9 +42,7 @@ let rec parseCommandLine args optionsSoFar =
         | [] -> 
             eprintfn "Repository needs a second argument"
             parseCommandLine xs optionsSoFar 
-        | _ -> 
-            eprintfn "Repository needs a second argument"
-            parseCommandLine xs optionsSoFar 
+
     | "/branch"::xs ->
         match xs with
         | x::xss -> 
