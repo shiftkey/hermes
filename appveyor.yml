@@ -1,0 +1,6 @@
+version: 0.0.{build}
+before_build:
+- ps: nuget restore ReleaseNotesGenerator/ReleaseNotesGenerator.sln
+build:
+  project: ReleaseNotesGenerator/ReleaseNotesGenerator.sln
+  verbosity: minimal

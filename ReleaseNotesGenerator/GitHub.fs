@@ -18,8 +18,8 @@ let findMergePullRequests (compareResult:Octokit.CompareResult) =
 let resolvePullRequest (client:ObservableGitHubClient) owner name id = 
     client.PullRequest.Get (owner, name, id)
 
-let getLabelsForPullRequest (client:ObservableGitHubClient) owner name number =
-     client.Issue.Labels.GetAllForIssue(owner, name, number)
+let getLabelsForPullRequest (client:ObservableGitHubClient) (owner:string) (name: string) (number:int) =
+     client.Issue.Labels.GetAllForIssue(owner, name, number, ApiOptions.None)
 
 type PullRequestSummary = { Title: string; Id: int; Author: string; Tags: string[] }
 
