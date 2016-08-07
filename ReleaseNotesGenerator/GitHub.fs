@@ -6,6 +6,8 @@ open System.Text.RegularExpressions
 open Octokit
 open Octokit.Reactive
 
+open Observables
+
 let mergeCommitRegex = Regex(@"Merge pull request #(?<id>\d{1,})", RegexOptions.Compiled);
 
 let findMergePullRequests (compareResult:Octokit.CompareResult) =
@@ -21,12 +23,25 @@ let resolvePullRequest (client:ObservableGitHubClient) owner name id =
 let getLabelsForPullRequest (client:ObservableGitHubClient) (owner:string) (name: string) (number:int) =
      client.Issue.Labels.GetAllForIssue(owner, name, number, ApiOptions.None)
 
+let getCommentsForPullRequest (client:ObservableGitHubClient) owner name number =
+     client.Issue.Comment.GetAllForIssue(owner, name, number)
+
+let getSummaryForPullRequest client owner name number defaultText =
+     let all = getCommentsForPullRequest client owner name number
+     // TODO: should look at author or something
+     let formattedMessage = all.LastOrDefaultAsync(fun c -> c.Body.StartsWith "release_notes: ")
+                               .Where(fun c -> c <> null)
+                               .Select(fun c -> c.Body.Replace("release_notes: ", ""))
+     // TODO: this ensures we only return one value
+     Observable.Concat(formattedMessage, Observable.Return(defaultText)).Take(1)
+
 type PullRequestSummary = { Title: string; Id: int; Author: string; Tags: string[] }
 
 let getPullRequestSummary (client:ObservableGitHubClient) owner name (pr:PullRequest) = 
     let labels = getLabelsForPullRequest client owner name pr.Number
     let labelNames = labels.Select(fun l -> l.Name).ToArray()
-    labelNames.Select(fun l -> { Title = pr.Title; Id = pr.Number; Author = pr.User.Login; Tags = l; })
+    let title = await (getSummaryForPullRequest client owner name pr.Number pr.Title)
+    labelNames.Select(fun l -> { Title = title; Id = pr.Number; Author = pr.User.Login; Tags = l; })
 
 let getGroupingForPullRequest (list:string[]) = 
     match list.Length with
